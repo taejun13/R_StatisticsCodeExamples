@@ -2,19 +2,20 @@
 
 library(dplyr)
 names = c("p1","p2","p3","p4","p5","p6","p7","p8","p9","p10","p11","p12")
-pose = c("armfront","armbody")
-method = c("baseline","2color","4color")
+group = c("alphabet", "digit")
+method = c("baseline","hetero")
+pose = c("armFront","armBody")
 mode = c("training","main")
 block = c("1","2")
 # 1. 1 Letter Accuracy [%]  
 
 base_df = data.frame()
-for (q in 1:2){
-  for(p in 2:2){
-    for(k in 1:3){
-      for(j in 1:2){
+for (q in 2:2){
+  for(p in 1:2){
+    for(k in 1:2){
+      for(j in 2:2){
         for (i in 1:12){
-          file_name = paste("data/",names[i],"_",pose[j],"_",method[k],"_",mode[p],"_", block[q], ".csv",sep="")
+          file_name = paste("data/",names[i],"_",group[j],"_",method[k],"_",pose[p],"_", mode[q], ".csv",sep="")
           file_data = read.csv(file_name, header=T, stringsAsFactors = F)
           base_df = rbind(base_df,file_data)
         }  
@@ -37,19 +38,22 @@ for(i in 1:nrow(base_df)){
 
 base_df
 
-result = group_by(base_df, id, cond, vibtype) %>%
+result = group_by(base_df, id, group, strategy, armpose) %>%
   summarise(
     count = n(),
     correct = mean(correct)*100,
     rt = mean(rt)
   )
-print(result,n=150)
+print(result,n=100)
+
+result
 result_df = as.data.frame(result)
+result_df
 
 result_df$count <- NULL
-result_df$cond = factor(result_df$cond, levels=pose)
-result_df$vibtype = factor(result_df$vibtype, levels = method)
-
+result_df$strategy = factor(result_df$strategy, levels=method)
+result_df$armpose = factor(result_df$armpose, levels=pose)
+result_df
 
 str(result_df)
 
@@ -68,7 +72,7 @@ summary(m)
 anova(m)
 
 # My Codes
-m <- art(correct ~ cond*vibtype + Error(id) , data = result_df)
+m <- art(correct ~ armpose*strategy + Error(id) , data = result_df)
 anova(m)
 summary(m)
 
